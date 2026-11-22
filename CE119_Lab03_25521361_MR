@@ -1,0 +1,62 @@
+.data
+n_val:  .word 20
+msg1:   .asciiz "F("
+msg2:   .asciiz ") = "
+
+.text
+.globl main
+main:
+        lw    $s0, n_val
+        move  $a0, $s0
+        jal   fib_opt           # Goi thu tuc da toi uu
+        move  $s1, $v0
+
+        li    $v0, 4
+        la    $a0, msg1
+        syscall
+
+        move  $a0, $s0
+        li    $v0, 1
+        syscall
+
+        li    $v0, 4
+        la    $a0, msg2
+        syscall
+
+        move  $a0, $s1
+        li    $v0, 1
+        syscall
+
+        li    $v0, 10
+        syscall
+
+# fib_opt: tinh F(n) de quy toi uu truong hop co so (khong cap khung khi n < 2)
+# Tham so : $a0 = n (n >= 0)
+# Tra ve  : $v0 = F(n)
+# Thanh ghi: $s0, $s1, $ra (chi cap khung khi n >= 2)
+fib_opt:
+        slti  $t0, $a0, 2       # Kiem tra n < 2 truoc khi cap khung
+        beq   $t0, $zero, fo_rec
+        move  $v0, $a0          # Truong hop co so: tra ve ngay, khong dung stack
+        jr    $ra
+
+fo_rec:
+        addi  $sp, $sp, -12     # Chi cap khung cho truong hop de quy (n >= 2)
+        sw    $ra, 8($sp)
+        sw    $s0, 4($sp)
+        sw    $s1, 0($sp)
+
+        move  $s0, $a0          # Giu gia tri n
+        addi  $a0, $s0, -1
+        jal   fib_opt           # Tinh F(n - 1)
+        move  $s1, $v0
+
+        addi  $a0, $s0, -2
+        jal   fib_opt           # Tinh F(n - 2)
+        add   $v0, $s1, $v0
+
+        lw    $s1, 0($sp)
+        lw    $s0, 4($sp)
+        lw    $ra, 8($sp)
+        addi  $sp, $sp, 12
+        jr    $ra
